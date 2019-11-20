@@ -1,24 +1,34 @@
 CC = gcc
-CFLAGS = -g3
-SDIR = src
+CFLAGS = -g3 -Wall
+
 BDIR = bin
-
-IDIR = include
-_DEPS = 
-DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
-
 ODIR = build
-_OBJ = 
+IDIR = include
+SDIR = src
+
+EXECUTABLE = runner
+
+_DEPS =	
+DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
+# DEPS = $(IDIR)/$(wildcard *.h)
+
+_OBJ = cordinator.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
+# OBJ = $(ODIR)/$(wildcard *.o)
 
-$(ODIR)/%.o: $(SDIR)/%.cpp $(DEPS)
-	$(CC) -c -o $@  $< $(CFLAGS)
+# SRC = $(SDIR)/$(wildcard *.c)
 
-$(BDIR)/runner: $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS)
+$(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY: clean
+$(BDIR)/$(EXECUTABLE): $(OBJ)
+	$(CC) $(CFLAGS) $^ -o $@
+
+.PHONY: clean run
+
+run:
+	./$(BDIR)/$(EXECUTABLE)
 
 clean:
 	rm -f $(ODIR)/*.o
-	rm -f $(BDIR)/runner
+	rm -f $(BDIR)/$(EXECUTABLE)
