@@ -8,7 +8,7 @@ SDIR = src
 
 EXECUTABLE = runner
 
-_DEPS =	
+_DEPS = entrie.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 # DEPS = $(IDIR)/$(wildcard *.h)
 
@@ -27,7 +27,7 @@ $(BDIR)/$(EXECUTABLE): $(OBJ)
 .PHONY: clean run
 
 run:
-	./$(BDIR)/$(EXECUTABLE)
+	./$(BDIR)/$(EXECUTABLE) 4 10 4 4
 
 clean:
 	rm -f $(ODIR)/*.o
