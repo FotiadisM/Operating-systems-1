@@ -8,11 +8,11 @@ SDIR = src
 
 EXECUTABLE = runner
 
-_DEPS = entrie.h
+_DEPS = entrie.h fnclib.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 # DEPS = $(IDIR)/$(wildcard *.h)
 
-_OBJ = cordinator.o
+_OBJ = cordinator.o fnclib.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 # OBJ = $(ODIR)/$(wildcard *.o)
 
@@ -27,7 +27,7 @@ $(BDIR)/$(EXECUTABLE): $(OBJ)
 .PHONY: clean run
 
 run:
-	./$(BDIR)/$(EXECUTABLE) 4 10 4 4
+	./$(BDIR)/$(EXECUTABLE) 8 10 5 3
 
 clean:
 	rm -f $(ODIR)/*.o
