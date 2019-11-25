@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g3 -Wall
+CFLAGS = -g3 -Wall -pthread
 
 BDIR = bin
 ODIR = build

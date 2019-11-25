@@ -4,7 +4,8 @@
 #include "entrie.h"
 
 char readerOrWriter(int *readers, int* writers);
+/* Determines if the procces will be a reader or a writer */
 
 void processAtWork(char isReader, EntriePtr mEntries);
-
+/* Function that all child processes execute */
 #endif

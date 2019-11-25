@@ -2,13 +2,18 @@
 #include <sys/sem.h>
 #include <sys/wait.h>
 #include <sys/shm.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <semaphore.h>
+#include <fcntl.h>
 
 #include "../include/entrie.h"
 #include "../include/fnclib.h"
+
+#define SEM_NAME "pSemaphore"
 
 int main(int argc, char* argv[])
 {
@@ -16,6 +21,7 @@ int main(int argc, char* argv[])
     int shmID, peers, entries, readers, writers;
     pid_t pid;
     key_t key;
+    sem_t* sem;
     EntriePtr mEntries;
 
     srand(time(NULL));
@@ -25,6 +31,9 @@ int main(int argc, char* argv[])
         return 0;
     }
     peers = atoi(argv[1]); entries = atoi(argv[2]); readers = atoi(argv[3]); writers = atoi(argv[4]);
+
+    sem = sem_open (SEM_NAME, O_CREAT | O_EXCL, 0644, 1);
+    sem_close(sem);
 
 
     key = ftok("./build/cordinator.c", rand());
@@ -39,11 +48,12 @@ int main(int argc, char* argv[])
         return -1;
     }
     for(int i=0; i < entries; i++) {
-        mEntries[i].id = 33;
+        mEntries[i].id = 0;
     }
 
 
     for(int i=0; i < peers; i++) {
+        isReader = readerOrWriter(&readers, &writers);
         pid = fork();
 
         if(pid == -1) {
@@ -51,12 +61,22 @@ int main(int argc, char* argv[])
             return -1;
         }
         else if(pid == 0) {
-            isReader = readerOrWriter(&readers, &writers);
+            printf("Child process with pid: %d was created\n", getpid());
+            sem = sem_open (SEM_NAME, 0);
+            sem_wait(sem);
             processAtWork(isReader, mEntries);
+            sem_post(sem);
+            sem_close(sem);
             exit(0);
         }
     }
 
+    for(int i=0; i < peers; i++) {
+        pid = wait(NULL);
+        printf("Child process with pid: %d exited\n", pid);
+    }
+
+    sem_unlink(SEM_NAME);
     shmdt(mEntries);
     shmctl(shmID, IPC_RMID, NULL);
 
