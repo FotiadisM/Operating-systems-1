@@ -3,6 +3,7 @@
 
 typedef struct Entrie {
     int id;
+    sem_t sem;
 } Entrie;
 
 typedef Entrie* EntriePtr;

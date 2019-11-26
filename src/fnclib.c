@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <semaphore.h>
 
 #include "../include/fnclib.h"
@@ -22,14 +24,20 @@ char readerOrWriter(int *readers, int* writers)
     return 1;
 }
 
-void processAtWork(char isReader, EntriePtr mEntries)
+void processAtWork(char isReader, EntriePtr mEntries, int entries)
 {
-    // sem_wait(sem);
+    int index = rand()%entries;
 
     if(isReader) {
-        printf("reader: %d\n", isReader);
+        sem_wait(&mEntries[index].sem);
+        sem_post(&mEntries[index].sem);
+        printf("\tReading entry: %d, value = %d, pid:%d\n", index, mEntries[index].id, getpid());
     }
     else {
-        printf("writer: %d\n", isReader);
+        sem_wait(&mEntries[index].sem);
+        printf("\tWriting on entry: %d, pid:%d\n", index, getpid());
+        mEntries[index].id++;
+        sem_post(&mEntries[index].sem);
     }
+
 }

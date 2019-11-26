@@ -21,7 +21,6 @@ int main(int argc, char* argv[])
     int shmID, peers, entries, readers, writers;
     pid_t pid;
     key_t key;
-    sem_t* sem;
     EntriePtr mEntries;
 
     srand(time(NULL));
@@ -31,10 +30,6 @@ int main(int argc, char* argv[])
         return 0;
     }
     peers = atoi(argv[1]); entries = atoi(argv[2]); readers = atoi(argv[3]); writers = atoi(argv[4]);
-
-    sem = sem_open (SEM_NAME, O_CREAT | O_EXCL, 0644, 1);
-    sem_close(sem);
-
 
     key = ftok("./build/cordinator.c", rand());
     shmID = shmget(key, entries*sizeof(Entrie), IPC_CREAT | 0666);
@@ -47,9 +42,13 @@ int main(int argc, char* argv[])
         perror("shmat() failed");
         return -1;
     }
+    printf("Entries at start\n");
     for(int i=0; i < entries; i++) {
-        mEntries[i].id = 0;
+        mEntries[i].id = 1;
+        sem_init(&mEntries[i].sem, 1, 1);
+        printf("%d ", mEntries[i].id);
     }
+    printf("\n");
 
 
     for(int i=0; i < peers; i++) {
@@ -61,22 +60,25 @@ int main(int argc, char* argv[])
             return -1;
         }
         else if(pid == 0) {
-            printf("Child process with pid: %d was created\n", getpid());
-            sem = sem_open (SEM_NAME, 0);
-            sem_wait(sem);
-            processAtWork(isReader, mEntries);
-            sem_post(sem);
-            sem_close(sem);
+            printf("Process created: pid = %d\n", getpid());
+            for(int i=0; i < 4; i++) {
+                processAtWork(isReader, mEntries, entries);
+            }
             exit(0);
         }
     }
 
     for(int i=0; i < peers; i++) {
         pid = wait(NULL);
-        printf("Child process with pid: %d exited\n", pid);
+        printf("Process with pid = %d exited\n", pid);
     }
+    printf("\nEntries at the end\n");
+    for(int i=0; i < entries; i++) {
+        printf("%d ", mEntries[i].id);
+        sem_destroy(&mEntries[i].sem);
+    }
+    printf("\n");
 
-    sem_unlink(SEM_NAME);
     shmdt(mEntries);
     shmctl(shmID, IPC_RMID, NULL);
 
