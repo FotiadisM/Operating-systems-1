@@ -10,13 +10,9 @@ EXECUTABLE = runner
 
 _DEPS = entrie.h fnclib.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
-# DEPS = $(IDIR)/$(wildcard *.h)
 
 _OBJ = cordinator.o fnclib.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
-# OBJ = $(ODIR)/$(wildcard *.o)
-
-# SRC = $(SDIR)/$(wildcard *.c)
 
 $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 	$(CC) $(CFLAGS) -c $< -o $@

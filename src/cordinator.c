@@ -63,6 +63,7 @@ int main(int argc, char* argv[])
             printf("Process created: pid = %d\n", getpid());
             for(int i=0; i < 4; i++) {
                 processAtWork(isReader, mEntries, entries);
+                // sleep(1);
             }
             exit(0);
         }
