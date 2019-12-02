@@ -13,7 +13,7 @@
 #include "../include/entrie.h"
 #include "../include/fnclib.h"
 
-#define SEM_NAME "pSemaphore"
+#define TIMES_TO_WORK 4
 
 int main(int argc, char* argv[])
 {
@@ -30,6 +30,15 @@ int main(int argc, char* argv[])
         return 0;
     }
     peers = atoi(argv[1]); entries = atoi(argv[2]); readers = atoi(argv[3]); writers = atoi(argv[4]);
+
+    if((readers+writers) > peers) {
+        printf("The number of Readers plus the number of writers must not exceed the number or childs given");
+        return 0;
+    }
+    else if(entries == 0) {
+        printf("The program need at least one entrie to run");
+        return 0;
+    }
 
     key = ftok("./build/cordinator.c", rand());
     shmID = shmget(key, entries*sizeof(Entrie), IPC_CREAT | 0666);
@@ -61,7 +70,7 @@ int main(int argc, char* argv[])
         }
         else if(pid == 0) {
             printf("Process created: pid = %d\n", getpid());
-            for(int i=0; i < 4; i++) {
+            for(int i=0; i < TIMES_TO_WORK; i++) {
                 processAtWork(isReader, mEntries, entries);
                 // sleep(1);
             }

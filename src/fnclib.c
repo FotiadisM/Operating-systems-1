@@ -27,6 +27,7 @@ char readerOrWriter(int *readers, int* writers)
 void processAtWork(char isReader, EntriePtr mEntries, int entries)
 {
     int index = rand()%entries;
+    // index = 0;
 
     if(isReader) {
         sem_wait(&mEntries[index].sem);
@@ -37,6 +38,7 @@ void processAtWork(char isReader, EntriePtr mEntries, int entries)
         sem_wait(&mEntries[index].sem);
         printf("\tWriting on entry: %d, pid:%d\n", index, getpid());
         mEntries[index].id++;
+        // sleep(2);
         sem_post(&mEntries[index].sem);
     }
 
