@@ -3,9 +3,13 @@
 
 #include "entrie.h"
 
-char readerOrWriter(int *readers, int* writers);
+char readerOrWriter(int iteration, int ratio);
 /* Determines if the procces will be a reader or a writer */
 
 void processAtWork(char isReader, EntriePtr mEntries, int entries);
 /* Function that all child processes execute */
+
+double randomExponential(double lambda);
+/*Calculates radnom Expontetial time*/
+
 #endif

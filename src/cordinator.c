@@ -12,27 +12,26 @@
 
 #include "../include/entrie.h"
 #include "../include/fnclib.h"
-
-#define TIMES_TO_WORK 4
+#include "../include/defines.h"
 
 int main(int argc, char* argv[])
 {
-    char isReader;
-    int shmID, peers, entries, readers, writers;
+    int shmID, peers, entries, ratio;
     pid_t pid;
     key_t key;
     EntriePtr mEntries;
 
     srand(time(NULL));
 
-    if(argc != 5) {
-        printf("Usage: ./bin/runner \"Number of childs\" \"Number of entries\" \"Number of readers\" \"Number of writers\"\n");
+    if(argc != 4) {
+        printf("Usage:\n./bin/runner \"Peers\" \"Entries\" \"Readers/Writers ratio\"\n");
         return 0;
     }
-    peers = atoi(argv[1]); entries = atoi(argv[2]); readers = atoi(argv[3]); writers = atoi(argv[4]);
 
-    if((readers+writers) > peers) {
-        printf("The number of Readers plus the number of writers must not exceed the number or childs given");
+    peers = atoi(argv[1]); entries = atoi(argv[2]); ratio = atoi(argv[3]);
+
+    if(peers == 0) {
+        printf("The program need at least one peer to run\n");
         return 0;
     }
     else if(entries == 0) {
@@ -40,7 +39,7 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    key = ftok("./build/cordinator.c", rand());
+    key = ftok(KEY_STRING, rand());
     shmID = shmget(key, entries*sizeof(Entrie), IPC_CREAT | 0666);
     if(shmID == -1) {
         perror("shmget() failed");
@@ -51,17 +50,18 @@ int main(int argc, char* argv[])
         perror("shmat() failed");
         return -1;
     }
-    printf("Entries at start\n");
+    printf("Printing Entries' initial values:\n");
     for(int i=0; i < entries; i++) {
         mEntries[i].id = 1;
-        sem_init(&mEntries[i].sem, 1, 1);
+        mEntries[i].rCount = 0; mEntries[i].wCount = 0;
+        mEntries[i].time = 0; mEntries[i].readcnt = 0;
+        sem_init(&mEntries[i].mutex, 1, 1); sem_init(&mEntries[i].wrt, 1, 1);
         printf("%d ", mEntries[i].id);
     }
-    printf("\n");
+    printf("\n\n");
 
 
     for(int i=0; i < peers; i++) {
-        isReader = readerOrWriter(&readers, &writers);
         pid = fork();
 
         if(pid == -1) {
@@ -69,10 +69,10 @@ int main(int argc, char* argv[])
             return -1;
         }
         else if(pid == 0) {
+            srand((int)getpid());
             printf("Process created: pid = %d\n", getpid());
-            for(int i=0; i < TIMES_TO_WORK; i++) {
-                processAtWork(isReader, mEntries, entries);
-                // sleep(1);
+            for(int i=0; i < NUMBER_OF_ITERATIONS; i++) {
+                processAtWork(readerOrWriter(i, ratio), mEntries, entries);
             }
             exit(0);
         }
@@ -82,12 +82,14 @@ int main(int argc, char* argv[])
         pid = wait(NULL);
         printf("Process with pid = %d exited\n", pid);
     }
-    printf("\nEntries at the end\n");
+
+    printf("\n\n|Entry number|Value|Times read|Times written|Average time|\n");
     for(int i=0; i < entries; i++) {
-        printf("%d ", mEntries[i].id);
-        sem_destroy(&mEntries[i].sem);
+        printf("|%12d|%5d|%10d|%13d|%12f|\n", i, mEntries[i].id, mEntries[i].rCount, mEntries[i].wCount, mEntries[i].time/mEntries[i].wCount);
+        sem_destroy(&mEntries[i].mutex);
+        sem_destroy(&mEntries[i].wrt);
     }
-    printf("\n");
+    printf("|--------------------------------------------------------|\n\n");
 
     shmdt(mEntries);
     shmctl(shmID, IPC_RMID, NULL);

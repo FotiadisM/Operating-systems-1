@@ -1,45 +1,68 @@
+#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include <semaphore.h>
+#include <time.h>
+#include <math.h>
 
 #include "../include/fnclib.h"
+#include "../include/defines.h"
 
-char readerOrWriter(int *readers, int* writers)
+char readerOrWriter(int iteration, int ratio)
 {
-    if(rand()%2) {
-        if(*readers != 0) {
-            (*readers)--;
-            return 1;
-        }
-        (*writers)--;
-        return 0;
-    }
-    if(*writers != 0) {
-        (*writers)--;
-        return 0;
-    }
-    (*readers)--;
-    return 1;
+    return rand()%2;
+}
+
+double randomExponential(double lambda)
+{
+    double u;
+
+    u = rand() / (RAND_MAX + 1.0);
+
+    return -log(1-u) / lambda;
 }
 
 void processAtWork(char isReader, EntriePtr mEntries, int entries)
 {
     int index = rand()%entries;
-    // index = 0;
+    // index = 9;
+    clock_t start, end;
+
+    start = clock();
 
     if(isReader) {
-        sem_wait(&mEntries[index].sem);
-        sem_post(&mEntries[index].sem);
+        sem_wait(&mEntries[index].mutex);
+        mEntries[index].readcnt++;
+        if(mEntries[index].readcnt == 1) {
+            sem_wait(&mEntries[index].wrt);
+        }
+
+        sem_post(&mEntries[index].mutex);
+
         printf("\tReading entry: %d, value = %d, pid:%d\n", index, mEntries[index].id, getpid());
+        mEntries[index].rCount++;
+        // mEntries[index].readingTime += expTime;
+        sleep(randomExponential(LAMBDA));
+
+        sem_wait(&mEntries[index].mutex);
+
+        mEntries[index].readcnt--;
+        if(mEntries[index].readcnt == 0) {
+            sem_post(&mEntries[index].wrt);
+        }
+        sem_post(&mEntries[index].mutex);
     }
     else {
-        sem_wait(&mEntries[index].sem);
+        sem_wait(&mEntries[index].wrt);
+        end = clock();
+
         printf("\tWriting on entry: %d, pid:%d\n", index, getpid());
         mEntries[index].id++;
-        // sleep(2);
-        sem_post(&mEntries[index].sem);
-    }
+        mEntries[index].wCount++;
+        mEntries[index].time += ((double) (end - start)) / CLOCKS_PER_SEC;
+        sleep(randomExponential(LAMBDA));
 
+        sem_post(&mEntries[index].wrt);
+    }
 }

@@ -2,8 +2,9 @@
 #define ENTRIE_H
 
 typedef struct Entrie {
-    int id;
-    sem_t sem;
+    int id, rCount, wCount, readcnt;
+    double time;
+    sem_t mutex, wrt;
 } Entrie;
 
 typedef Entrie* EntriePtr;

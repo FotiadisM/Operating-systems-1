@@ -1,5 +1,6 @@
 CC = gcc
-CFLAGS = -g3 -Wall -pthread
+CFLAGS = -g3 -Wall -pthread -lm
+LDFLAGS = -lm
 
 BDIR = bin
 ODIR = build
@@ -8,22 +9,22 @@ SDIR = src
 
 EXECUTABLE = runner
 
-_DEPS = entrie.h fnclib.h
+_DEPS = entrie.h fnclib.h defines.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
 _OBJ = cordinator.o fnclib.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@ $(LDFLAGS)
 
 $(BDIR)/$(EXECUTABLE): $(OBJ)
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 .PHONY: clean run
 
 run:
-	./$(BDIR)/$(EXECUTABLE) 8 10 5 3
+	./$(BDIR)/$(EXECUTABLE) 8 10 1
 
 clean:
 	rm -f $(ODIR)/*.o
