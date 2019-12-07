@@ -69,10 +69,12 @@ int main(int argc, char* argv[])
             return -1;
         }
         else if(pid == 0) {
+            int curWriters = 0, curReaders = 0;
+
             srand((int)getpid());
             printf("Process created: pid = %d\n", getpid());
             for(int i=0; i < NUMBER_OF_ITERATIONS; i++) {
-                processAtWork(readerOrWriter(i, ratio), mEntries, entries);
+                processAtWork(readerOrWriter(&curWriters, &curReaders, ratio), mEntries, entries);
             }
             exit(0);
         }
@@ -85,7 +87,13 @@ int main(int argc, char* argv[])
 
     printf("\n\n|Entry number|Value|Times read|Times written|Average time|\n");
     for(int i=0; i < entries; i++) {
-        printf("|%12d|%5d|%10d|%13d|%12f|\n", i, mEntries[i].id, mEntries[i].rCount, mEntries[i].wCount, mEntries[i].time/mEntries[i].wCount);
+        double Time = 0.0;
+
+        if(mEntries[i].wCount) {
+            Time = mEntries[i].time/mEntries[i].wCount;
+        }
+
+        printf("|%12d|%5d|%10d|%13d|%12f|\n", i, mEntries[i].id, mEntries[i].rCount, mEntries[i].wCount, Time);
         sem_destroy(&mEntries[i].mutex);
         sem_destroy(&mEntries[i].wrt);
     }

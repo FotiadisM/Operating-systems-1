@@ -9,9 +9,32 @@
 #include "../include/fnclib.h"
 #include "../include/defines.h"
 
-char readerOrWriter(int iteration, int ratio)
+char readerOrWriter(int* curWriters, int* curReaders, int ratio)
 {
-    return rand()%2;
+    int isReader, maxReaders, maxWriters;
+
+    maxWriters = NUMBER_OF_ITERATIONS/(ratio + 1);
+    maxReaders = NUMBER_OF_ITERATIONS - maxWriters;
+
+    isReader = rand()%2;
+    if(!isReader) {
+        if(*curWriters == maxWriters) {
+            isReader = 1;
+            (*curReaders)++;
+        }
+        else
+            (*curWriters)++;
+    }
+    else {
+        if(*curReaders == maxReaders) {
+            isReader = 0;
+            (*curWriters)++;
+        }
+        else
+            (*curReaders)++;
+    }
+
+    return isReader;
 }
 
 double randomExponential(double lambda)
@@ -28,8 +51,6 @@ void processAtWork(char isReader, EntriePtr mEntries, int entries)
     int index = rand()%entries;
     // index = 9;
     clock_t start, end;
-
-    start = clock();
 
     if(isReader) {
         sem_wait(&mEntries[index].mutex);
@@ -54,6 +75,7 @@ void processAtWork(char isReader, EntriePtr mEntries, int entries)
         sem_post(&mEntries[index].mutex);
     }
     else {
+        start = clock();
         sem_wait(&mEntries[index].wrt);
         end = clock();
 

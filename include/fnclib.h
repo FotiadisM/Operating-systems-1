@@ -3,7 +3,7 @@
 
 #include "entrie.h"
 
-char readerOrWriter(int iteration, int ratio);
+char readerOrWriter(int* curWriters, int* curReaders, int ratio);
 /* Determines if the procces will be a reader or a writer */
 
 void processAtWork(char isReader, EntriePtr mEntries, int entries);
