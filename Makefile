@@ -9,7 +9,7 @@ SDIR = src
 
 EXECUTABLE = runner
 
-_DEPS = entrie.h fnclib.h defines.h cordinator.h
+_DEPS = entry.h fnclib.h defines.h cordinator.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
 _OBJ = main.o cordinator.o fnclib.o

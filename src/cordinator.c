@@ -10,7 +10,7 @@
 #include <semaphore.h>
 #include <fcntl.h>
 
-#include "../include/entrie.h"
+#include "../include/entry.h"
 #include "../include/fnclib.h"
 #include "../include/defines.h"
 
@@ -19,18 +19,18 @@ int cordinator(int peers, int entries, int ratio)
     int shmID, totatReads = 0 , totalWrites = 0;
     pid_t pid;
     key_t key;
-    EntriePtr mEntries;
+    EntryPtr mEntries;
 
     srand(time(NULL));
 
     key = ftok(KEY_STRING, rand());
-    shmID = shmget(key, entries*sizeof(Entrie), IPC_CREAT | 0666);
+    shmID = shmget(key, entries*sizeof(Entry), IPC_CREAT | 0666);
     if(shmID == -1) {
         perror("shmget() failed");
         return -1;
     }
 
-    mEntries = (EntriePtr) shmat(shmID, NULL, 0);
+    mEntries = (EntryPtr) shmat(shmID, NULL, 0);
     if(!mEntries) {
         perror("shmat() failed");
         return -1;
@@ -75,9 +75,7 @@ int cordinator(int peers, int entries, int ratio)
 
         totatReads += mEntries[i].rCount;
         totalWrites += mEntries[i].wCount;
-        if(mEntries[i].wCount) {
-            Time = mEntries[i].time/mEntries[i].wCount;
-        }
+        Time = mEntries[i].time/(mEntries[i].wCount + mEntries[i].rCount);
 
         printf("|%12d|%5d|%10d|%13d|%12f|\n", i, mEntries[i].id, mEntries[i].rCount, mEntries[i].wCount, Time);
         sem_destroy(&mEntries[i].mutex);

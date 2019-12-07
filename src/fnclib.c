@@ -16,6 +16,9 @@ char readerOrWriter(int* curWriters, int* curReaders, int ratio)
     maxWriters = NUMBER_OF_ITERATIONS/(ratio + 1);
     maxReaders = NUMBER_OF_ITERATIONS - maxWriters;
 
+    // return 1;
+    // return 0;
+
     isReader = rand()%2;
     if(!isReader) {
         if(*curWriters == maxWriters) {
@@ -46,7 +49,7 @@ double randomExponential(double lambda)
     return -log(1-u) / lambda;
 }
 
-void processAtWork(char isReader, EntriePtr mEntries, int entries)
+void processAtWork(char isReader, EntryPtr mEntries, int entries)
 {
     int index = rand()%entries;
     clock_t start, end;
@@ -62,10 +65,12 @@ void processAtWork(char isReader, EntriePtr mEntries, int entries)
 
         sem_post(&mEntries[index].mutex);
 
+        start = clock();
         printf("\tReading entry: %d, value = %d, pid:%d\n", index, mEntries[index].id, getpid());
         mEntries[index].rCount++;
-        // mEntries[index].readingTime += expTime;
         sleep(randomExponential(LAMBDA));
+        end = clock();
+        mEntries[index].time += ((double) (end - start)) / CLOCKS_PER_SEC;
 
         sem_wait(&mEntries[index].mutex);
 
@@ -76,15 +81,15 @@ void processAtWork(char isReader, EntriePtr mEntries, int entries)
         sem_post(&mEntries[index].mutex);
     }
     else {
-        start = clock();
         sem_wait(&mEntries[index].wrt);
-        end = clock();
 
+        start = clock();
         printf("\tWriting on entry: %d, pid:%d\n", index, getpid());
         mEntries[index].id++;
         mEntries[index].wCount++;
-        mEntries[index].time += ((double) (end - start)) / CLOCKS_PER_SEC;
         sleep(randomExponential(LAMBDA));
+        end = clock();
+        mEntries[index].time += ((double) (end - start)) / CLOCKS_PER_SEC;
 
         sem_post(&mEntries[index].wrt);
     }
