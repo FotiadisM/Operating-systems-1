@@ -14,30 +14,14 @@
 #include "../include/fnclib.h"
 #include "../include/defines.h"
 
-int main(int argc, char* argv[])
+int cordinator(int peers, int entries, int ratio)
 {
-    int shmID, peers, entries, ratio;
+    int shmID, totatReads = 0 , totalWrites = 0;
     pid_t pid;
     key_t key;
     EntriePtr mEntries;
 
     srand(time(NULL));
-
-    if(argc != 4) {
-        printf("Usage:\n./bin/runner \"Peers\" \"Entries\" \"Readers/Writers ratio\"\n");
-        return 0;
-    }
-
-    peers = atoi(argv[1]); entries = atoi(argv[2]); ratio = atoi(argv[3]);
-
-    if(peers == 0) {
-        printf("The program need at least one peer to run\n");
-        return 0;
-    }
-    else if(entries == 0) {
-        printf("The program need at least one entrie to run");
-        return 0;
-    }
 
     key = ftok(KEY_STRING, rand());
     shmID = shmget(key, entries*sizeof(Entrie), IPC_CREAT | 0666);
@@ -45,20 +29,20 @@ int main(int argc, char* argv[])
         perror("shmget() failed");
         return -1;
     }
+
     mEntries = (EntriePtr) shmat(shmID, NULL, 0);
     if(!mEntries) {
         perror("shmat() failed");
         return -1;
     }
-    printf("Printing Entries' initial values:\n");
+
     for(int i=0; i < entries; i++) {
         mEntries[i].id = 1;
         mEntries[i].rCount = 0; mEntries[i].wCount = 0;
         mEntries[i].time = 0; mEntries[i].readcnt = 0;
         sem_init(&mEntries[i].mutex, 1, 1); sem_init(&mEntries[i].wrt, 1, 1);
-        printf("%d ", mEntries[i].id);
     }
-    printf("\n\n");
+    printf("\n");
 
 
     for(int i=0; i < peers; i++) {
@@ -89,6 +73,8 @@ int main(int argc, char* argv[])
     for(int i=0; i < entries; i++) {
         double Time = 0.0;
 
+        totatReads += mEntries[i].rCount;
+        totalWrites += mEntries[i].wCount;
         if(mEntries[i].wCount) {
             Time = mEntries[i].time/mEntries[i].wCount;
         }
@@ -98,6 +84,7 @@ int main(int argc, char* argv[])
         sem_destroy(&mEntries[i].wrt);
     }
     printf("|--------------------------------------------------------|\n\n");
+    printf("Total Reads: %d\nTotal Writes: %d\n\n", totatReads, totalWrites);
 
     shmdt(mEntries);
     shmctl(shmID, IPC_RMID, NULL);

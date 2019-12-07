@@ -49,8 +49,9 @@ double randomExponential(double lambda)
 void processAtWork(char isReader, EntriePtr mEntries, int entries)
 {
     int index = rand()%entries;
-    // index = 9;
     clock_t start, end;
+
+    // index = 9;
 
     if(isReader) {
         sem_wait(&mEntries[index].mutex);
